@@ -88,7 +88,10 @@ def create_execute_node(registry: ToolRegistry):
         all_results: list[str] = []
         knowledge = state.get("knowledge")
 
-        for action in planned_actions:
+        if len(planned_actions) > 1:
+            print(f"\n  ⚡ Executing {len(planned_actions)} actions...", flush=True)
+
+        for i, action in enumerate(planned_actions):
             tool_name = action.get("tool_name", "list_directory")
             tool_args = action.get("tool_args", {"path": "."})
             action_desc = action.get("description", tool_name)
@@ -141,6 +144,11 @@ def create_execute_node(registry: ToolRegistry):
                 command_raw=command_raw or f"{tool_name}({tool_args})",
                 permission_level=PermissionLevel.SAFE, decision="auto_approved",
             ))
+
+            # Immediate feedback for multi-action rounds
+            if len(planned_actions) > 1:
+                status_str = "✓" if success else "✗"
+                print(f"  {status_str} [{i+1}/{len(planned_actions)}] {tool_name}({str(tool_args)[:60]})", flush=True)
 
             # Observation per action
             obs_parts = [f"[Execute R{round_number}]"]

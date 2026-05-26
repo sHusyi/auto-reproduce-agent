@@ -53,6 +53,9 @@ independent actions together (e.g., list directory + read README + read
 requirements.txt in one round). Don't over-batch — actions that depend
 on previous results should be separate rounds.
 
+Tip: execute_command supports shell chaining (&&, |, >). Use
+"pip install torch && python -c 'import torch'" instead of two calls.
+
 {tool_list}
 
 Output a JSON object:

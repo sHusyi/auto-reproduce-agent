@@ -14,8 +14,14 @@ def create_shell_tool(executor: SandboxedExecutor) -> list:
     def execute_command(command: str) -> str:
         """Execute a shell command inside the sandboxed workspace.
 
-        Use this for: installing packages, running Python scripts, git operations,
+        Use this for: installing packages, running scripts, git operations,
         and any other shell commands needed to set up or test the project.
+
+        Shell features you can use:
+        - Chain commands: pip install torch && python -c "import torch"
+        - Pipes: pip list | grep torch
+        - Redirects: python train.py > output.log 2>&1
+        - Multi-line: use \\n to separate commands
 
         The command runs in an isolated workspace directory. Dangerous commands
         (sudo, writes outside workspace, system modification) are blocked.
