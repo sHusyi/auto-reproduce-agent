@@ -37,9 +37,33 @@ def create_file_tools(workspace_root: str | Path) -> list:
             if not full.is_file():
                 return f"Error: not a file: {path}"
             content = full.read_text()
-            if len(content) > 10000:
-                content = content[:10000] + "\n... [truncated]"
             return content
+        except ValueError as e:
+            return f"Error: {e}"
+
+    @tool
+    def edit_file(path: str, old_string: str, new_string: str) -> str:
+        """Replace a string in a file. Finds the first exact match and replaces it.
+
+        Use this to make targeted edits without rewriting the entire file.
+        The old_string must match exactly (including whitespace).
+
+        Args:
+            path: Relative path to the file.
+            old_string: Exact text to find and replace.
+            new_string: Replacement text.
+        """
+        try:
+            full = _resolve(path)
+            if not full.is_file():
+                return f"Error: not a file: {path}"
+            content = full.read_text()
+            if old_string not in content:
+                return f"Error: string not found in {path}. Use read_file first to check exact content."
+            # Replace first occurrence only
+            content = content.replace(old_string, new_string, 1)
+            full.write_text(content)
+            return f"File edited: {path} (replaced {len(old_string)} chars with {len(new_string)} chars)"
         except ValueError as e:
             return f"Error: {e}"
 
@@ -111,4 +135,4 @@ def create_file_tools(workspace_root: str | Path) -> list:
         except subprocess.TimeoutExpired:
             return "Error: search timed out"
 
-    return [read_file, write_file, list_directory, search_code]
+    return [read_file, edit_file, write_file, list_directory, search_code]

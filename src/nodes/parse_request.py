@@ -20,19 +20,23 @@ Output format:
     "paper_url": "Paper URL (arxiv, openaccess, etc. — extract from message, or null)",
     "target_metrics": {"metric_name": target_value, ...},
     "task_summary": "One-sentence summary of what the user wants",
-    "missing_info": ["What critical information is missing? (empty if sufficient)"],
-    "suggestions": ["Suggestions for target metrics if user didn't specify any"]
+    "missing_info": ["What critical information is missing?"],
+    "suggestions": []
 }
 
-Rules:
-- If the user provides a GitHub URL, extract it as repo_url.
-- If the user provides a paper link (arxiv.org, paperswithcode.com, etc.), extract it.
-- If the user says "复现实验结果" or "reproduce results", target_metrics can be empty
-  (the agent will extract them from the paper/README).
-- If the user specifies metrics like "准确率达到95%" or "accuracy > 95%",
-  parse them into target_metrics.
-- If critical info is missing (no repo URL, unclear goal), list it in missing_info.
-- Be helpful and specific in suggestions."""
+Critical rule — "missing_info" should be EMPTY in these cases:
+- The user provided a GitHub repo URL and asked to "reproduce results" or "复现实验结果"
+  → The README contains the claimed results; the agent will extract targets later.
+  → target_metrics = {} (empty), missing_info = []
+- The user says "跑一下这个仓库" / "复现" / "reproduce" with a repo link → sufficient.
+  → Do NOT ask for specific models, datasets, or accuracy targets — the repo has those.
+
+Only mark missing_info if truly critical information is absent:
+- No repo URL at all → "Please provide a GitHub repository URL."
+- The user's request is completely ambiguous (not about reproduction) → ask for clarification.
+
+Do NOT mark missing_info for things the repo README can answer (model names, metrics, datasets).
+That's the agent's job to discover, not the user's job to specify."""
 
 
 def create_parse_request_node(llm: BaseChatModel):

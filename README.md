@@ -63,6 +63,7 @@ The agent forms hypotheses, tests them, and adjusts strategy. When it gets stuck
 git clone https://github.com/Azusa0811/auto-reproduce-agent.git
 cd auto-reproduce-agent
 uv sync
+uv pip install -e .    # Install the project itself
 cp .env.example .env   # Add your DEEPSEEK_API_KEY
 
 uv run mlagent         # Chat mode

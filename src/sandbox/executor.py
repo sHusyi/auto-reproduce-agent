@@ -136,24 +136,27 @@ class SandboxedExecutor:
             )
 
     def _filtered_env(self) -> dict[str, str]:
-        """Pass through all environment variables, excluding only secrets.
-
-        Security is handled at the file system level (workspace isolation)
-        and command level (permission controller). Environment variables
-        don't need another security layer — they just need secret filtering.
+        """Pass through environment, stripping parent venv/conda so the agent
+        starts clean and must create its own isolated environment inside the
+        workspace. Does not force any specific tool or path — the agent decides.
         """
-        # Patterns that look like secrets — these are stripped
         secret_suffixes = (
             "_API_KEY", "_SECRET", "_TOKEN", "_PASSWORD", "_PASSWD",
             "_CREDENTIAL", "_PRIVATE_KEY",
         )
         secret_prefixes = ("SECRET_", "PRIVATE_")
 
+        # Strip only what ties processes to an external virtual environment.
+        # Without VIRTUAL_ENV, pip/uv won't install into the parent .venv.
+        # Without CONDA_*, conda won't think it's inside an existing env.
+        strip_keys = {"VIRTUAL_ENV", "CONDA_PREFIX", "CONDA_DEFAULT_ENV",
+                      "CONDA_EXE", "CONDA_PYTHON_EXE", "CONDA_PROMPT_MODIFIER"}
+
         env = {}
         for key, value in os.environ.items():
-            # Skip secrets
-            if any(key.endswith(s) or key.startswith(s)
-                   for s in secret_suffixes for s in (s,)):
+            if key in strip_keys:
+                continue
+            if any(key.endswith(s) for s in secret_suffixes):
                 continue
             if any(key.startswith(p) for p in secret_prefixes):
                 continue

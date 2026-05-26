@@ -48,6 +48,14 @@ FORBIDDEN_PATTERNS = [
     re.compile(r"chmod\s+.*777\s+/"),            # chmod 777 on system paths
 ]
 
+# Commands whose arguments may be write targets (paths need workspace check)
+WRITE_EXECUTABLES = frozenset({
+    "cp", "mv", "rm", "touch", "mkdir", "rmdir",
+    "tar", "zip", "unzip", "dd", "chmod", "chown",
+    "pip", "pip3", "conda", "npm", "yarn",
+    "git", "wget", "curl",
+})
+
 FORBIDDEN_EXECUTABLES = frozenset({
     "shutdown", "reboot", "halt", "poweroff",
     "mkfs", "fdisk", "mount", "umount",
@@ -129,7 +137,7 @@ class PermissionController:
         has_pipe = "|" in raw
 
         for arg in args:
-            # Skip flags
+            # Skip flags, but track paths in install/prefix flags
             if arg.startswith("-"):
                 if arg.startswith("--prefix=") or arg.startswith("--target="):
                     path_str = arg.split("=", 1)[1]
@@ -137,12 +145,11 @@ class PermissionController:
                     resolved_paths.append(resolved)
                     if not self._is_within_workspace(resolved):
                         writes_outside = True
-                    if self._is_system_path(resolved):
-                        targets_system = True
                 continue
 
-            # Check if arg looks like a path
-            if self._looks_like_path(arg):
+            # Only check paths for write operations (cp, mv, rm, etc.).
+            # Execution arguments like /path/to/python are read-only, not write targets.
+            if self._looks_like_path(arg) and executable in WRITE_EXECUTABLES:
                 resolved = self._resolve_path(arg)
                 resolved_paths.append(resolved)
                 if not self._is_within_workspace(resolved):

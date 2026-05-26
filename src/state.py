@@ -9,6 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Annotated, Any, Literal, TypedDict
 
+from langchain_core.messages import BaseMessage
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -191,6 +192,9 @@ class ResearchState(TypedDict, total=False):
     reflection: str
     decision: str
     verdict: str  # "continue" | "success" | "partial" | "failed"
+
+    # Conversation history (full LLM reasoning chain)
+    messages: Annotated[list[BaseMessage], operator.add]
 
     # History
     experiment_history: Annotated[list[ExperimentRecord], operator.add]

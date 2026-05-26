@@ -203,7 +203,7 @@ class ResearchOrchestrator:
                     # Record metrics
                     if node_name == "execute":
                         result = node_output.get("last_result", "")
-                        success = "Error" not in result and "FAILED" not in result[:20]
+                        success = "FAILED" not in result[:20]
                         self.metrics.record_node(
                             node_name=node_name, round_number=current_round,
                             success=success,
@@ -263,6 +263,7 @@ class ResearchOrchestrator:
             ),
             "hypotheses": [],
             "observations": initial_observations,
+            "messages": [],
             "round_number": 0,
             "assessment": "", "plan": [],
             "planned_actions": [],

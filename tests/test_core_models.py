@@ -112,8 +112,9 @@ def test_permission_controller():
     assert level == PermissionLevel.DANGEROUS
 
     # Path resolution
+    # cat /etc/passwd is a READ operation — not flagged as write target
     level, parsed = pc.check("cat /etc/passwd")
-    assert parsed.targets_system_paths
+    assert not parsed.writes_outside_workspace  # reading, not writing
 
     print("✓ permission controller: all tests passed")
 

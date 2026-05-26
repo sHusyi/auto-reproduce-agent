@@ -115,6 +115,17 @@ class CheckpointManager:
             else:
                 out["hypotheses"].append(h)
 
+        # Messages (conversation history)
+        out["messages"] = []
+        for msg in state.get("messages", []):
+            try:
+                out["messages"].append({
+                    "type": msg.__class__.__name__,
+                    "content": msg.content,
+                })
+            except Exception:
+                pass
+
         # Observations
         out["observations"] = state.get("observations", [])
 
@@ -179,6 +190,20 @@ class CheckpointManager:
             except Exception:
                 pass
         data["audit_log"] = audits
+
+        # Messages (conversation history)
+        from langchain_core.messages import AIMessage, HumanMessage
+        messages = []
+        for md in data.get("messages", []):
+            try:
+                msg_type = md.get("type", "")
+                if msg_type == "HumanMessage":
+                    messages.append(HumanMessage(content=md.get("content", "")))
+                elif msg_type == "AIMessage":
+                    messages.append(AIMessage(content=md.get("content", "")))
+            except Exception:
+                pass
+        data["messages"] = messages
 
         # Restore should_continue if verdict was "continue" and not at max
         verdict = data.get("verdict", "continue")

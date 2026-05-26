@@ -116,7 +116,11 @@ def run_chat_loop(llm_config):
         from src.ui.orchestrator_display import OrchestratorDisplay
 
         setup_langsmith()
-        sandbox = SandboxedExecutor(workspace)
+
+        def approval_cb(cmd, level):
+            term.warning(f"[{level.name}] {cmd[:120]}")
+            return term.confirm("Approve this command?", default_yes=False)
+        sandbox = SandboxedExecutor(workspace, approval_callback=approval_cb)
         audit = AuditLogger(workspace / "audit.jsonl")
         tracker = ExperimentTracker(workspace / "experiments.db")
         checkpoint = CheckpointManager(workspace)

@@ -1,11 +1,11 @@
-"""REFLECT node — result analysis with full error access, using shared context."""
+"""REFLECT node — result analysis with reasoning-chain history."""
 
 from __future__ import annotations
 
 import json
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from src.context import SHARED_SYSTEM_PROMPT, ContextBuilder
 from src.state import HypothesisStatus, ResearchState
@@ -13,26 +13,28 @@ from src.state import HypothesisStatus, ResearchState
 
 def create_reflect_node(llm: BaseChatModel):
     def reflect(state: ResearchState) -> dict:
+        round_num = state.get("round_number", 0)
         user_prompt = ContextBuilder.build(state, "reflect")
+
+        history = state.get("messages", [])
         response = llm.invoke([
             SystemMessage(content=SHARED_SYSTEM_PROMPT),
+            *history,
             HumanMessage(content=user_prompt),
         ])
         try:
             reflection = json.loads(response.content)
         except json.JSONDecodeError:
             reflection = {
-                "result_summary": "Could not parse reflection",
+                "result_summary": "Could not parse",
                 "expectation_met": False,
-                "what_was_learned": "Reflection parsing failed",
+                "what_was_learned": "Parsing failed",
                 "strategy_adjustment": "Continue",
             }
 
-        # Update hypothesis statuses
         updated_hypotheses = []
-        hypothesis_updates = reflection.get("hypothesis_updates", [])
         for h in state.get("hypotheses", []):
-            for update in hypothesis_updates:
+            for update in reflection.get("hypothesis_updates", []):
                 if update.get("id") == h.id:
                     new_status = update.get("new_status")
                     evidence = update.get("evidence", "")
@@ -44,7 +46,9 @@ def create_reflect_node(llm: BaseChatModel):
                         h.status = HypothesisStatus.TESTING
             updated_hypotheses.append(h)
 
-        round_num = state.get("round_number", 0)
+        label = HumanMessage(content=f"[Round {round_num} REFLECT]")
+        ai_msg = AIMessage(content=response.content)
+
         return {
             "reflection": json.dumps(reflection, indent=2),
             "hypotheses": updated_hypotheses,
@@ -52,5 +56,6 @@ def create_reflect_node(llm: BaseChatModel):
                 f"[Reflect R{round_num}] {reflection.get('what_was_learned', '')} "
                 f"→ {reflection.get('strategy_adjustment', '')}"
             ],
+            "messages": [label, ai_msg],
         }
     return reflect

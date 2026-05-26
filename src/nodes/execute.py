@@ -127,7 +127,7 @@ def create_execute_node(registry: ToolRegistry):
             else:
                 structured_result = result_str
 
-            success = failure_type == FailureType.UNKNOWN and "Error" not in result_str
+            success = failure_type == FailureType.UNKNOWN
             all_results.append(structured_result)
 
             # Command tracking

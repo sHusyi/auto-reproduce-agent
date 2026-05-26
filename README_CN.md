@@ -63,6 +63,7 @@ Agent 会形成假设、验证假设、调整策略。卡住时主动向人类�
 git clone https://github.com/Azusa0811/auto-reproduce-agent.git
 cd auto-reproduce-agent
 uv sync
+uv pip install -e . 
 cp .env.example .env   # 填 DEEPSEEK_API_KEY
 
 uv run mlagent         # 聊天模式
