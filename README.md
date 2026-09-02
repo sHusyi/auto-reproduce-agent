@@ -60,7 +60,7 @@ The agent forms hypotheses, tests them, and adjusts strategy. When it gets stuck
 ## Quick Start
 
 ```bash
-git clone https://github.com/Azusa0811/auto-reproduce-agent.git
+git clone https://github.com/sHusyi/auto-reproduce-agent.git
 cd auto-reproduce-agent
 uv sync
 uv pip install -e .    # Install the project itself

@@ -60,7 +60,7 @@ Agent 会形成假设、验证假设、调整策略。卡住时主动向人类�
 ## 快速开始
 
 ```bash
-git clone https://github.com/Azusa0811/auto-reproduce-agent.git
+git clone https://github.com/sHusyi/auto-reproduce-agent.git
 cd auto-reproduce-agent
 uv sync
 uv pip install -e . 
